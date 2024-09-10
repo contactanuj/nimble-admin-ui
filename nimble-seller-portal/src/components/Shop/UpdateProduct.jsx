@@ -13,7 +13,8 @@ const UpdateProduct = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const [images, setImages] = useState([]);
+  const [images, setImages] = useState([]); // Existing images
+  const [newImages, setNewImages] = useState([]); // New images uploaded by the user
   const [name, setName] = useState("");
   const [productId, setProductId] = useState("");
   const [description, setDescription] = useState("");
@@ -41,7 +42,7 @@ const UpdateProduct = () => {
       setOriginalPrice(productDetails.originalPrice);
       setDiscountPrice(productDetails.discountPrice);
       setStock(productDetails.stock);
-      setImages(productDetails.images);
+      setImages(productDetails.images); // Set existing images
     }
   }, [productDetails]);
 
@@ -58,29 +59,38 @@ const UpdateProduct = () => {
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-
+  
+    setNewImages([]);
     setImages([]);
-
+  
     files.forEach((file) => {
       const reader = new FileReader();
-
+  
       reader.onload = () => {
         if (reader.readyState === 2) {
-          setImages((old) => [...old, reader.result]);
+          setNewImages((old) => [...old, reader.result]);
         }
       };
       reader.readAsDataURL(file);
     });
   };
+  
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
     const updatedForm = new FormData();
 
-    images.forEach((image) => {
+    // Only append new images to the FormData if they exist
+    newImages.forEach((image) => {
       updatedForm.set("images", image);
     });
+
+    // Append the existing images (unchanged)
+    if (newImages.length === 0) {
+      updatedForm.append("images", JSON.stringify(images)); // If no new images, use the existing images
+    }
+
     updatedForm.append("name", name);
     updatedForm.append("productId", productId);
     updatedForm.append("description", description);
@@ -90,6 +100,7 @@ const UpdateProduct = () => {
     updatedForm.append("discountPrice", discountPrice);
     updatedForm.append("stock", stock);
     updatedForm.append("shopId", seller._id);
+
     dispatch(
       updateProduct(id, {
         name,
@@ -101,7 +112,7 @@ const UpdateProduct = () => {
         discountPrice,
         stock,
         shopId: seller._id,
-        images,
+        images: newImages.length > 0 ? newImages : images, // Only send new images if they exist
       })
     );
   };
@@ -215,9 +226,7 @@ const UpdateProduct = () => {
         </div>
         <br />
         <div>
-          <label className="pb-2">
-            Product Stock <span className="text-red-500">*</span>
-          </label>
+          <label className="pb-2">Stock</label>
           <input
             type="number"
             name="price"
@@ -229,39 +238,49 @@ const UpdateProduct = () => {
         </div>
         <br />
         <div>
-          <label className="pb-2">
-            Upload Images <span className="text-red-500">*</span>
-          </label>
+          <label className="pb-2">Upload Images</label>
           <input
             type="file"
-            name=""
+            name="images"
             id="upload"
             className="hidden"
             multiple
             onChange={handleImageChange}
           />
           <div className="w-full flex items-center flex-wrap">
-            <label htmlFor="upload">
-              <AiOutlinePlusCircle size={30} className="mt-3" color="#555" />
-            </label>
+            {/* Preview existing images */}
             {images &&
-              images.map((i) => (
+              images.map((image, index) => (
                 <img
-                  src={i.url}
-                  key={i._id}
+                  src={image.url}
+                  key={index}
                   alt=""
                   className="h-[120px] w-[120px] object-cover m-2"
                 />
               ))}
+            {/* Preview new images */}
+            {newImages &&
+              newImages.map((image, index) => (
+                <img
+                  src={image}
+                  key={index}
+                  alt=""
+                  className="h-[120px] w-[120px] object-cover m-2"
+                />
+              ))}
+
+            <label htmlFor="upload">
+              <AiOutlinePlusCircle size={30} className="mt-3" color="#555" />
+            </label>
           </div>
-          <br />
-          <div>
-            <input
-              type="submit"
-              value="Update"
-              className="mt-2 cursor-pointer appearance-none block w-full px-3 h-[35px] border border-gray-300 rounded-[3px] placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            />
-          </div>
+        </div>
+        <br />
+        <div>
+          <input
+            type="submit"
+            value="Update"
+            className="w-full border h-[35px] rounded-[3px] text-center cursor-pointer mt-8"
+          />
         </div>
       </form>
     </div>

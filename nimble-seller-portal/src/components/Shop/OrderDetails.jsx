@@ -7,6 +7,7 @@ import { getAllOrdersOfShop } from "../../redux/actions/order";
 import { server } from "../../server";
 import axios from "axios";
 import { toast } from "react-toastify";
+import VerificationModal from "./VerificationModal"; // Import the modal component
 
 const OrderDetails = () => {
   const { orders, isLoading } = useSelector((state) => state.order);
@@ -14,6 +15,7 @@ const OrderDetails = () => {
   const dispatch = useDispatch();
   const [status, setStatus] = useState("");
   const [action, setAction] = useState(""); // New state for tracking action
+  const [modalOpen, setModalOpen] = useState(false); // State for modal visibility
   const navigate = useNavigate();
 
   const { id } = useParams();
@@ -51,6 +53,14 @@ const OrderDetails = () => {
     } else if (actionType === "Modify") {
       const nextStatus = "Modification Requested";
       orderUpdateHandler(nextStatus);
+    }
+  };
+
+  const handleStatusUpdate = () => {
+    if (data?.status === "Ready for Pickup") {
+      setModalOpen(true);
+    } else {
+      orderUpdateHandler(status);
     }
   };
 
@@ -111,7 +121,9 @@ const OrderDetails = () => {
       <div className="w-full 800px:flex items-center">
         <div className="w-full 800px:w-[60%]">
           <h4 className="pt-3 text-[20px] font-[600]">Shipping Address:</h4>
-          <h4 className="pt-3 text-[20px]">{data?.shippingAddress.address1} {data?.shippingAddress.address2}</h4>
+          <h4 className="pt-3 text-[20px]">
+            {data?.shippingAddress.address1} {data?.shippingAddress.address2}
+          </h4>
           <h4 className="text-[20px]">{data?.shippingAddress.country}</h4>
           <h4 className="text-[20px]">{data?.shippingAddress.city}</h4>
           <h4 className="text-[20px]">{data?.user?.phoneNumber}</h4>
@@ -122,8 +134,17 @@ const OrderDetails = () => {
         </div>
       </div>
 
+      {/* Add Premium Status, Order Code, and Collection Time */}
+      <h4 className="pt-3 text-[20px] font-[600]">Premium Subscription:</h4>
+      <h5 className="text-[18px]">{data?.isPremium ? "Premium" : "Normal"}</h5>
+
+      <h4 className="pt-3 text-[20px] font-[600]">Collection Time:</h4>
+      <h5 className="text-[18px]">{data?.selectedCollectionTime}</h5>
+
+      <h4 className="pt-3 text-[20px] font-[600]">Order Code:</h4>
+      <h5 className="text-[18px]">{data?.orderCode}</h5>
+
       <h4 className="pt-3 text-[20px] font-[600]">Order Status:</h4>
-      
 
       <div className="flex items-center mt-5">
         <span className="mr-2 text-lg font-medium">Current Status: {data?.status}</span>
@@ -143,7 +164,7 @@ const OrderDetails = () => {
             </select>
             <div
               className={`${styles.button} mt-5 bg-primary-500 text-white rounded-lg shadow-md hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50 font-semibold py-2 px-4 text-lg`}
-              onClick={() => status && orderUpdateHandler(status)}
+              onClick={handleStatusUpdate}
               disabled={!status}
             >
               Update Status
@@ -174,6 +195,16 @@ const OrderDetails = () => {
           </button>
         </div>
       )}
+
+      <VerificationModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onVerify={() => {
+          orderUpdateHandler("Delivered");
+          setModalOpen(false);
+        }}
+        orderId={id}
+      />
     </div>
   );
 };

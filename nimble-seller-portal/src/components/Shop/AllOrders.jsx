@@ -22,6 +22,20 @@ const OrderItemsTooltip = ({ items }) => (
   </TableContainer>
 );
 
+// Helper function to format date
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric'
+  });
+};
+
 const AllOrders = () => {
   const { orders, isLoading } = useSelector((state) => state.order);
   const { seller } = useSelector((state) => state.seller);
@@ -30,7 +44,7 @@ const AllOrders = () => {
 
   useEffect(() => {
     dispatch(getAllOrdersOfShop(seller._id));
-  }, [dispatch]);
+  }, [dispatch, seller._id]);
 
   const columns = [
     { field: "id", headerName: "Order ID", minWidth: 150, flex: 0.7 },
@@ -38,17 +52,20 @@ const AllOrders = () => {
     {
       field: "status",
       headerName: "Status",
-      minWidth: 130,
+      minWidth: 150,
       flex: 0.7,
-      cellClassName: (params) => {
-        return params.value === "Delivered" ? "greenColor" : "redColor";
-      },
+    },
+    {
+      field: "collectionTime",
+      headerName: "Collection Time",
+      minWidth: 150,
+      flex: 0.7,
     },
     {
       field: "itemsQty",
       headerName: "Items Qty",
       type: "number",
-      minWidth: 130,
+      minWidth: 150,
       flex: 0.7,
       renderCell: (params) => (
         <Tooltip
@@ -64,7 +81,7 @@ const AllOrders = () => {
       field: "total",
       headerName: "Total",
       type: "number",
-      minWidth: 130,
+      minWidth: 150,
       flex: 0.8,
     },
     {
@@ -88,19 +105,15 @@ const AllOrders = () => {
     },
   ];
 
-  const row = [];
-
-  orders &&
-    orders.forEach((item) => {
-      row.push({
-        id: item._id,
-        user: item.user?.name,
-        itemsQty: item.cart.length,
-        total: "US$ " + item.totalPrice,
-        status: item.status,
-        items: item.cart, // Store cart items for tooltip
-      });
-    });
+  const row = orders?.map((item) => ({
+    id: item._id,
+    user: item.user?.name,
+    itemsQty: item.cart.length,
+    total: "US$ " + item.totalPrice,
+    status: item.status,
+    collectionTime: formatDate(item.selectedCollectionTime),
+    items: item.cart,
+  }));
 
   return (
     <>
