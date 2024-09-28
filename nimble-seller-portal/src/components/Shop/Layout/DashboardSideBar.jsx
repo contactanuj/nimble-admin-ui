@@ -8,12 +8,13 @@ import { CiMoneyBill, CiSettings } from "react-icons/ci";
 import { Link } from "react-router-dom";
 import { BiMessageSquareDetail } from "react-icons/bi";
 import { HiOutlineReceiptRefund } from "react-icons/hi";
+import { IoNotificationsOutline } from "react-icons/io5"; // Import notification icon
 
 const DashboardSideBar = ({ active }) => {
   return (
     <div className="w-full h-[90vh] bg-white shadow-sm overflow-y-scroll sticky top-0 left-0 z-10">
       {/* single item */}
-      <div className="w-full flex items-center p-4">
+      <div className="w-full flex items-center p-4 hover:bg-gray-100">
         <Link to="/dashboard" className="w-full flex items-center">
           <RxDashboard
             size={30}
@@ -29,7 +30,7 @@ const DashboardSideBar = ({ active }) => {
         </Link>
       </div>
 
-      <div className="w-full flex items-center p-4">
+      <div className="w-full flex items-center p-4 hover:bg-gray-100">
         <Link to="/dashboard-orders" className="w-full flex items-center">
           <FiShoppingBag
             size={30}
@@ -45,7 +46,7 @@ const DashboardSideBar = ({ active }) => {
         </Link>
       </div>
 
-      <div className="w-full flex items-center p-4">
+      <div className="w-full flex items-center p-4 hover:bg-gray-100">
         <Link to="/dashboard-products" className="w-full flex items-center">
           <FiPackage size={30} color={`${active === 3 ? "crimson" : "#555"}`} />
           <h5
@@ -58,7 +59,7 @@ const DashboardSideBar = ({ active }) => {
         </Link>
       </div>
 
-      <div className="w-full flex items-center p-4">
+      <div className="w-full flex items-center p-4 hover:bg-gray-100">
         <Link
           to="/dashboard-create-product"
           className="w-full flex items-center"
@@ -77,7 +78,23 @@ const DashboardSideBar = ({ active }) => {
         </Link>
       </div>
 
-      <div className="w-full flex items-center p-4">
+      <div className="w-full flex items-center p-4 hover:bg-gray-100">
+        <Link to="/shop-notification" className="w-full flex items-center">
+          <IoNotificationsOutline
+            size={30}
+            color={`${active === 5 ? "crimson" : "#555"}`}
+          />
+          <h5
+            className={`hidden 800px:block pl-2 text-[18px] font-[400] ${
+              active === 5 ? "text-[crimson]" : "text-[#555]"
+            }`}
+          >
+            Shop Notifications
+          </h5>
+        </Link>
+      </div>
+
+      <div className="w-full flex items-center p-4 hover:bg-gray-100">
         <Link to="/settings" className="w-full flex items-center">
           <CiSettings
             size={30}

@@ -42,6 +42,18 @@ const orderReducer = createReducer(initialState, (builder) => {
       state.adminOrderLoading = false;
       state.error = action.payload;
     })
+    // Get order by ID
+    .addCase("getOrderByIdRequest", (state) => {
+      state.isLoading = true;
+    })
+    .addCase("getOrderByIdSuccess", (state, action) => {
+      state.isLoading = false;
+      state.orderDetails = action.payload;
+    })
+    .addCase("getOrderByIdFailed", (state, action) => {
+      state.isLoading = false;
+      state.error = action.payload;
+    })
     // Clear errors
     .addCase('clearErrors', (state) => {
       state.error = null;

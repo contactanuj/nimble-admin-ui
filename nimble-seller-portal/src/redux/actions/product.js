@@ -3,9 +3,10 @@ import { server } from "../../server";
 
 // create product
 export const createProduct =
-  (
+  ( productId,
     name,
     description,
+    barCodeContent,
     category,
     tags,
     originalPrice,
@@ -22,8 +23,10 @@ export const createProduct =
 
       const { data } = await axios.post(
         `${server}/product/create-product`,
+        productId,
         name,
         description,
+        barCodeContent,
         category,
         tags,
         originalPrice,

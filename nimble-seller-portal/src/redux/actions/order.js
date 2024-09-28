@@ -69,3 +69,26 @@ export const getAllOrdersOfAdmin = () => async (dispatch) => {
     });
   }
 };
+
+// Get order by ID
+export const getOrderById = (orderId) => async (dispatch) => {
+  try {
+    dispatch({
+      type: "getOrderByIdRequest",
+    });
+
+    const { data } = await axios.get(`${server}/order/${orderId}`, {
+      withCredentials: true,
+    });
+
+    dispatch({
+      type: "getOrderByIdSuccess",
+      payload: data.order,
+    });
+  } catch (error) {
+    dispatch({
+      type: "getOrderByIdFailed",
+      payload: error.response?.data?.message || "Failed to fetch order",
+    });
+  }
+};

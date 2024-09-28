@@ -17,6 +17,7 @@ const UpdateProduct = () => {
   const [newImages, setNewImages] = useState([]); // New images uploaded by the user
   const [name, setName] = useState("");
   const [productId, setProductId] = useState("");
+  const [barCodeContent, setBarCodeContent] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [tags, setTags] = useState("");
@@ -37,6 +38,7 @@ const UpdateProduct = () => {
       setName(productDetails.name);
       setProductId(productDetails.productId);
       setDescription(productDetails.description);
+      setBarCodeContent(productDetails.barCodeContent);
       setCategory(productDetails.category);
       setTags(productDetails.tags);
       setOriginalPrice(productDetails.originalPrice);
@@ -94,6 +96,7 @@ const UpdateProduct = () => {
     updatedForm.append("name", name);
     updatedForm.append("productId", productId);
     updatedForm.append("description", description);
+    updatedForm.append("barCodeCotent", barCodeContent);
     updatedForm.append("category", category);
     updatedForm.append("tags", tags);
     updatedForm.append("originalPrice", originalPrice);
@@ -106,6 +109,7 @@ const UpdateProduct = () => {
         name,
         productId,
         description,
+        barCodeContent,
         category,
         tags,
         originalPrice,
@@ -166,6 +170,20 @@ const UpdateProduct = () => {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Enter your product description..."
           ></textarea>
+        </div>
+        <br />
+        <div>
+          <label className="pb-2">
+            Bar Code Content <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="barCodeContent"
+            value={barCodeContent}
+            className="mt-2 appearance-none block w-full px-3 h-[35px] border border-gray-300 rounded-[3px] placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            onChange={(e) => setBarCodeContent(e.target.value)}
+            placeholder="Enter your bar code content..."
+          />
         </div>
         <br />
         <div>

@@ -8,6 +8,8 @@ import { getAllOrdersOfShop } from "../../redux/actions/order";
 import { getAllProductsShop } from "../../redux/actions/product";
 import { DataGrid } from "@mui/x-data-grid";
 import { Button } from "@mui/material";
+import AllOrders from "./AllOrders";
+import ShopNotifications from "./ShopNotifications";
 
 const DashboardHero = () => {
   const dispatch = useDispatch();
@@ -139,15 +141,8 @@ const DashboardHero = () => {
       </div>
       <br />
       <h3 className="text-[22px] font-Poppins pb-2">Latest Orders</h3>
-      <div className="w-full min-h-[45vh] bg-white rounded">
-      <DataGrid
-        rows={row}
-        columns={columns}
-        pageSize={10}
-        disableSelectionOnClick
-        autoHeight
-      />
-      </div>
+      <AllOrders showSearchBox={false} />
+      <br />
     </div>
   );
 };

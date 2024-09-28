@@ -16,6 +16,7 @@ const CreateProduct = () => {
   const [productId, setProductId] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [barCodeContent, setBarCodeContent] = useState("");
   const [category, setCategory] = useState("");
   const [tags, setTags] = useState("");
   const [originalPrice, setOriginalPrice] = useState();
@@ -61,6 +62,7 @@ const CreateProduct = () => {
     newForm.append("productId", productId);
     newForm.append("name", name);
     newForm.append("description", description);
+    newForm.append("barCodeContent", barCodeContent);
     newForm.append("category", category);
     newForm.append("tags", tags);
     newForm.append("originalPrice", originalPrice);
@@ -69,9 +71,10 @@ const CreateProduct = () => {
     newForm.append("shopId", seller._id);
     dispatch(
       createProduct({
-        productId: productId,
+        productId,
         name,
         description,
+        barCodeContent,
         category,
         tags,
         originalPrice,
@@ -132,6 +135,20 @@ const CreateProduct = () => {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Enter your product description..."
           ></textarea>
+        </div>
+        <br />
+        <div>
+          <label className="pb-2">
+            Bar Code Content <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="barCodeContent"
+            value={barCodeContent}
+            className="mt-2 appearance-none block w-full px-3 h-[35px] border border-gray-300 rounded-[3px] placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            onChange={(e) => setBarCodeContent(e.target.value)}
+            placeholder="Enter the bar code content..."
+          />
         </div>
         <br />
         <div>

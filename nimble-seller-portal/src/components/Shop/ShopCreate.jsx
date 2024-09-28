@@ -1,4 +1,4 @@
-import { React, useState } from "react";
+import { React, useEffect, useState } from "react";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import styles from "../../styles/styles";
 import { Link, useNavigate } from "react-router-dom";
@@ -15,7 +15,21 @@ const ShopCreate = () => {
   const [zipCode, setZipCode] = useState();
   const [avatar, setAvatar] = useState();
   const [password, setPassword] = useState("");
+  const [location, setLocation] = useState("");
   const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setLocation(`${latitude},${longitude}`);
+      },
+      (error) => {
+        console.error("Error fetching location:", error);
+        toast.error("Unable to fetch location. Please try again.");
+      }
+    );
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,6 +43,7 @@ const ShopCreate = () => {
         zipCode,
         address,
         phoneNumber,
+        location,
       })
       .then((res) => {
         toast.success(res.data.message);
@@ -39,6 +54,7 @@ const ShopCreate = () => {
         setZipCode();
         setAddress("");
         setPhoneNumber();
+        setLocation("");
       })
       .catch((error) => {
         toast.error(error.response.data.message);
@@ -162,7 +178,21 @@ const ShopCreate = () => {
                 />
               </div>
             </div>
-
+            <div className="hidden">
+              <label htmlFor="location" className="block text-sm font-medium text-gray-700">
+                Location (Latitude, Longitude)
+              </label>
+              <div className="mt-1">
+                <input
+                  type="text"
+                  name="location"
+                  required
+                  value={location}
+                  readOnly
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                />
+              </div>
+            </div>
             <div>
               <label
                 htmlFor="password"

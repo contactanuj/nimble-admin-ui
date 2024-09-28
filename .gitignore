@@ -1,7 +1,7 @@
 ######################
 # Project Specific
 ######################
-/target/classes/static/**
+/target/classes/static/
 /src/test/javascript/coverage/
 
 ######################
@@ -11,60 +11,14 @@ nimble-seller-portal/node/
 nimble-seller-portal/build/
 nimble-seller-portal/node_tmp/
 nimble-seller-portal/node_modules/
-npm-debug.log.*
-/.awcache/*
-/.cache-loader/*
+npm-debug.log*
+/.awcache/
+/.cache-loader/
 
 ######################
 # SASS
 ######################
 .sass-cache/
-
-######################
-# Eclipse
-######################
-*.pydevproject
-.project
-.metadata
-tmp/
-tmp/**/*
-*.tmp
-*.bak
-*.swp
-*~.nib
-local.properties
-.classpath
-.settings/
-.loadpath
-.factorypath
-/src/main/resources/rebel.xml
-
-# External tool builders
-.externalToolBuilders/**
-
-# Locally stored "Eclipse launch configurations"
-*.launch
-
-# CDT-specific
-.cproject
-
-# PDT-specific
-.buildpath
-
-# STS-specific
-/.sts4-cache/*
-
-######################
-# IntelliJ
-######################
-.idea/
-*.iml
-*.iws
-*.ipr
-*.ids
-*.orig
-classes/
-out/
 
 ######################
 # Visual Studio Code
@@ -99,10 +53,7 @@ out/
 ######################
 # Windows
 ######################
-# Windows image file caches
 Thumbs.db
-
-# Folder config file
 Desktop.ini
 
 ######################
@@ -110,11 +61,7 @@ Desktop.ini
 ######################
 .DS_Store
 .svn
-
-# Thumbnails
 ._*
-
-# Files that might appear on external disk
 .Spotlight-V100
 .Trashes
 
@@ -157,3 +104,9 @@ Desktop.ini
 ######################
 /coverage/
 /.nyc_output/
+
+######################
+# React specific
+######################
+build/
+public/
