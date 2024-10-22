@@ -10,7 +10,7 @@ export const SocketProvider = ({ children }) => {
     const [socket, setSocket] = useState(null); // Manage socket state
 
     useEffect(() => {
-        const newSocket = io('http://localhost:8000'); // Initialize socket connection
+        const newSocket = io('http://localhost:8800/connection'); // Initialize socket connection
         setSocket(newSocket); // Set socket instance
 
         // Listen for notifications globally

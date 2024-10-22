@@ -20,7 +20,6 @@ import {
   ShopLoginPage,
   OrderDetailsPage,
   TrackOrderPage,
-  UserInbox,
 } from "./routes/Routes.js";
 import {
   ShopDashboardPage,
@@ -77,7 +76,7 @@ const App = () => {
 
   // Initialize socket connection
   useEffect(() => {
-    const newSocket = io('http://localhost:8000');
+    const newSocket = io('http://localhost:8800/connection');
     setSocket(newSocket); // Set the socket instance globally
 
     // Clean up on component unmount

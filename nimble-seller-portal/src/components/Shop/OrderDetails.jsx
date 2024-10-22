@@ -7,6 +7,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { AlertCircle, ShoppingCart, ThumbsUp, UtensilsCrossed, Box, Check, X, ArrowLeft, MessageCircle } from 'lucide-react';
 import VerificationModal from './VerificationModal';
+import AskAlternativesModal from './AskAlternativesModal';
 
 const OrderDetails = () => {
   const { orderDetails, isLoading } = useSelector((state) => state.order);
@@ -24,6 +25,7 @@ const OrderDetails = () => {
   const [hasError, setHasError] = useState(false);
   const [modifiedHasError, setModifiedHasError] = useState(false);
   const [originalHasError, setOriginalHasError] = useState(false);
+  const [askAlternativesModalOpen, setAskAlternativesModalOpen] = useState(false);
 
   const toggleModificationView = () => setShowModifications(!showModifications);
 
@@ -70,10 +72,28 @@ const OrderDetails = () => {
     }
   };
 
+
   const handleSuggestAlternate = () => {
-    setisAskForAlternatives(true);
-    handleAction('Ask For Alternatives');
-  };
+  setAskAlternativesModalOpen(true);
+};
+
+const handleAlternativesSubmit = async (alternateItems) => {
+  try {
+    await axios.put(
+      `${server}/order/update-order-status/${id}`,
+      {
+        status: 'Needs Review',
+        alternateItems
+      },
+      { withCredentials: true }
+    );
+    toast.success('Alternatives requested successfully');
+    setAskAlternativesModalOpen(false);
+    dispatch(getOrderById(id));
+  } catch (error) {
+    toast.error(error.response?.data?.message || 'Error updating order');
+  }
+};
 
   const handleAction = async (actionType) => {
     setAction(actionType);
@@ -497,6 +517,13 @@ const OrderDetails = () => {
           orderUpdateHandler('Preparing');
         }}
         outOfStockItems={outOfStockItems}
+      />
+
+      <AskAlternativesModal
+        open={askAlternativesModalOpen}
+        onClose={() => setAskAlternativesModalOpen(false)}
+        cart={data?.cart || []}
+        onSubmit={handleAlternativesSubmit}
       />
     
 
