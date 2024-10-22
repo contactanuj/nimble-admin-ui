@@ -82,7 +82,7 @@ const handleAlternativesSubmit = async (alternateItems) => {
     await axios.put(
       `${server}/order/update-order-status/${id}`,
       {
-        status: 'Needs Review',
+        status: 'User Action Required',
         alternateItems
       },
       { withCredentials: true }

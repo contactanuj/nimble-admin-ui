@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getNotifications, listenForNotifications, markNotificationRead, markAllNotificationsRead, deleteNotification, deleteAllNotifications, searchNotifications } from '../../redux/actions/notification';
 import {
   Box,
@@ -41,6 +41,7 @@ const theme = createTheme({
 });
 
 const ShopNotifications = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { notifications } = useSelector((state) => state.notification);
   const { seller } = useSelector((state) => state.seller);
@@ -72,6 +73,16 @@ const ShopNotifications = () => {
 
   const handleDeleteAll = () => {
     dispatch(deleteAllNotifications(seller._id));
+  };
+
+  const handleNotificationClick = (notification) => {
+    handleMarkRead(notification._id);
+    
+    if (notification.type === 'out_of_stock') {
+      navigate(`/dashboard-update-product/${notification.productId}`);
+    } else {
+      navigate(`/order/${notification.orderId}`);
+    }
   };
 
   return (
@@ -147,8 +158,20 @@ const ShopNotifications = () => {
                 <List>
                   {allNotifications.map((notification) => (
                     <Card key={notification._id} sx={{ mb: 2 }}>
-                      <CardContent>
-                        <Typography variant="body1" component={Link} to={`/order/${notification.orderId}`} color="primary">
+                      <CardContent 
+                        onClick={() => handleNotificationClick(notification)}
+                        sx={{ 
+                          cursor: 'pointer',
+                          '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
+                        }}
+                      >
+                        <Typography 
+                          variant="body1" 
+                          sx={{ 
+                            fontWeight: notification.read ? 'normal' : 'medium',
+                            color: 'primary.main'
+                          }}
+                        >
                           {notification.message}
                         </Typography>
                         <Typography variant="caption" color="text.secondary" display="block">

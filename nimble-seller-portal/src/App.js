@@ -76,7 +76,7 @@ const App = () => {
 
   // Initialize socket connection
   useEffect(() => {
-    const newSocket = io('http://localhost:8800/connection');
+    const newSocket = io('http://localhost:8800');
     setSocket(newSocket); // Set the socket instance globally
 
     // Clean up on component unmount
@@ -105,7 +105,10 @@ const App = () => {
   useEffect(() => {
     if (socket) {
       socket.on('notification', (notification) => {
-        toast.info(`New notification: ${notification.message}`);
+        toast.error(`New notification: ${notification.message}`, {
+          autoClose: false,
+          closeOnClick: false,
+        });
       });
 
       return () => {
