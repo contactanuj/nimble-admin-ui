@@ -1,5 +1,5 @@
-export const server = "http://localhost:8800/api/v2";
+export const server = "https://nimble-backend-services.onrender.com/api/v2";
 
-export const backend_url = "http://localhost:8800/";
+export const backend_url = "https://nimble-backend-services.onrender.com/";
 
 
