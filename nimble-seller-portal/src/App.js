@@ -76,7 +76,7 @@ const App = () => {
 
   // Initialize socket connection
   useEffect(() => {
-    const newSocket = io('http://localhost:8800');
+    const newSocket = io('https://nimble-backend-services.onrender.com');
     setSocket(newSocket); // Set the socket instance globally
 
     // Clean up on component unmount
