@@ -7,44 +7,61 @@ import { categoriesData } from "../../static/data";
 import { toast } from "react-toastify";
 
 const UpdateProduct = () => {
-  const { id } = useParams(); // Get the product ID from the URL parameters
+  const { id } = useParams();
   const { seller } = useSelector((state) => state.seller);
   const { productDetails, success, error } = useSelector((state) => state.products);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const [images, setImages] = useState([]); // Existing images
-  const [newImages, setNewImages] = useState([]); // New images uploaded by the user
-  const [name, setName] = useState("");
-  const [productId, setProductId] = useState("");
-  const [barCodeContent, setBarCodeContent] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
-  const [tags, setTags] = useState("");
-  const [originalPrice, setOriginalPrice] = useState();
-  const [discountPrice, setDiscountPrice] = useState();
-  const [stock, setStock] = useState();
+  const [formData, setFormData] = useState({
+    productId: "",
+    name: "",
+    description: "",
+    status: "active",
+    category: "",
+    subCategory: "",
+    brand: "",
+    tags: "",
+    barCodeContent: "",
+    cost: "",
+    originalPrice: "",
+    discountPrice: "",
+    stock: "",
+    weight: "",
+    taxCode: "",
+    expiration: "",
+    images: [],
+    newImages: []
+  });
 
   useEffect(() => {
-    // Fetch product details when the component mounts
     if (id) {
       dispatch(fetchProductDetails(id));
     }
   }, [dispatch, id]);
 
   useEffect(() => {
-    // Populate form fields with product details when they are loaded
     if (productDetails) {
-      setName(productDetails.name);
-      setProductId(productDetails.productId);
-      setDescription(productDetails.description);
-      setBarCodeContent(productDetails.barCodeContent);
-      setCategory(productDetails.category);
-      setTags(productDetails.tags);
-      setOriginalPrice(productDetails.originalPrice);
-      setDiscountPrice(productDetails.discountPrice);
-      setStock(productDetails.stock);
-      setImages(productDetails.images); // Set existing images
+      setFormData({
+        productId: productDetails.productId || "",
+        name: productDetails.name || "",
+        description: productDetails.description || "",
+        status: productDetails.status || "active",
+        category: productDetails.category || "",
+        subCategory: productDetails.subCategory || "",
+        brand: productDetails.brand || "",
+        tags: productDetails.tags || "",
+        barCodeContent: productDetails.barCodeContent || "",
+        cost: productDetails.cost || "",
+        originalPrice: productDetails.originalPrice || "",
+        discountPrice: productDetails.discountPrice || "",
+        stock: productDetails.stock || "",
+        weight: productDetails.weight || "",
+        taxCode: productDetails.taxCode || "",
+        expiration: productDetails.expiration ? new Date(productDetails.expiration).toISOString().split('T')[0] : "",
+        images: productDetails.images || [],
+        newImages: []
+      });
     }
   }, [productDetails]);
 
@@ -59,246 +76,332 @@ const UpdateProduct = () => {
     }
   }, [dispatch, error, success]);
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-  
-    setNewImages([]);
-    setImages([]);
-  
+    setFormData(prev => ({
+      ...prev,
+      newImages: []
+    }));
+
     files.forEach((file) => {
       const reader = new FileReader();
-  
       reader.onload = () => {
         if (reader.readyState === 2) {
-          setNewImages((old) => [...old, reader.result]);
+          setFormData(prev => ({
+            ...prev,
+            newImages: [...prev.newImages, reader.result]
+          }));
         }
       };
       reader.readAsDataURL(file);
     });
   };
-  
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    const updatedForm = new FormData();
-
-    // Only append new images to the FormData if they exist
-    newImages.forEach((image) => {
-      updatedForm.set("images", image);
-    });
-
-    // Append the existing images (unchanged)
-    if (newImages.length === 0) {
-      updatedForm.append("images", JSON.stringify(images)); // If no new images, use the existing images
-    }
-
-    updatedForm.append("name", name);
-    updatedForm.append("productId", productId);
-    updatedForm.append("description", description);
-    updatedForm.append("barCodeCotent", barCodeContent);
-    updatedForm.append("category", category);
-    updatedForm.append("tags", tags);
-    updatedForm.append("originalPrice", originalPrice);
-    updatedForm.append("discountPrice", discountPrice);
-    updatedForm.append("stock", stock);
-    updatedForm.append("shopId", seller._id);
-
-    dispatch(
-      updateProduct(id, {
-        name,
-        productId,
-        description,
-        barCodeContent,
-        category,
-        tags,
-        originalPrice,
-        discountPrice,
-        stock,
-        shopId: seller._id,
-        images: newImages.length > 0 ? newImages : images, // Only send new images if they exist
-      })
-    );
+    const updatedProduct = {
+      ...formData,
+      shopId: seller._id,
+      images: formData.newImages.length > 0 ? formData.newImages : formData.images
+    };
+    dispatch(updateProduct(id, updatedProduct));
   };
 
   return (
-    <div className="w-[90%] 800px:w-[50%] bg-white  shadow h-[80vh] rounded-[4px] p-3 overflow-y-scroll">
+    <div className="w-[90%] 800px:w-[50%] bg-white shadow h-[80vh] rounded-[4px] p-3 overflow-y-scroll">
       <h5 className="text-[30px] font-Poppins text-center">Update Product</h5>
-      {/* update product form */}
-      <form onSubmit={handleSubmit}>
-        <br />
-        <div>
-          <label className="pb-2">
-            Product Id <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            name="productId"
-            value={productId}
-            className="mt-2 appearance-none block w-full px-3 h-[35px] border border-gray-300 rounded-[3px] placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            onChange={(e) => setProductId(e.target.value)}
-            placeholder="Enter your product id..."
-          />
-        </div>
-        <br />
-        <div>
-          <label className="pb-2">
-            Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            name="name"
-            value={name}
-            className="mt-2 appearance-none block w-full px-3 h-[35px] border border-gray-300 rounded-[3px] placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter your product name..."
-          />
-        </div>
-        <br />
-        <div>
-          <label className="pb-2">
-            Description <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            cols="30"
-            required
-            rows="8"
-            type="text"
-            name="description"
-            value={description}
-            className="mt-2 appearance-none block w-full pt-2 px-3 border border-gray-300 rounded-[3px] placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Enter your product description..."
-          ></textarea>
-        </div>
-        <br />
-        <div>
-          <label className="pb-2">
-            Bar Code Content <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            name="barCodeContent"
-            value={barCodeContent}
-            className="mt-2 appearance-none block w-full px-3 h-[35px] border border-gray-300 rounded-[3px] placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            onChange={(e) => setBarCodeContent(e.target.value)}
-            placeholder="Enter your bar code content..."
-          />
-        </div>
-        <br />
-        <div>
-          <label className="pb-2">
-            Category <span className="text-red-500">*</span>
-          </label>
-          <select
-            className="w-full mt-2 border h-[35px] rounded-[5px]"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          >
-            <option value="Choose a category">Choose a category</option>
-            {categoriesData &&
-              categoriesData.map((i) => (
-                <option value={i.title} key={i.title}>
-                  {i.title}
-                </option>
-              ))}
-          </select>
-        </div>
-        <br />
-        <div>
-          <label className="pb-2">Tags</label>
-          <input
-            type="text"
-            name="tags"
-            value={tags}
-            className="mt-2 appearance-none block w-full px-3 h-[35px] border border-gray-300 rounded-[3px] placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            onChange={(e) => setTags(e.target.value)}
-            placeholder="Enter your product tags..."
-          />
-        </div>
-        <br />
-        <div>
-          <label className="pb-2">Original Price</label>
-          <input
-            type="number"
-            name="price"
-            value={originalPrice}
-            className="mt-2 appearance-none block w-full px-3 h-[35px] border border-gray-300 rounded-[3px] placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            onChange={(e) => setOriginalPrice(e.target.value)}
-            placeholder="Enter your product price..."
-          />
-        </div>
-        <br />
-        <div>
-          <label className="pb-2">
-            Price (With Discount) <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="number"
-            name="price"
-            value={discountPrice}
-            className="mt-2 appearance-none block w-full px-3 h-[35px] border border-gray-300 rounded-[3px] placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            onChange={(e) => setDiscountPrice(e.target.value)}
-            placeholder="Enter your product price with discount..."
-          />
-        </div>
-        <br />
-        <div>
-          <label className="pb-2">Stock</label>
-          <input
-            type="number"
-            name="price"
-            value={stock}
-            className="mt-2 appearance-none block w-full px-3 h-[35px] border border-gray-300 rounded-[3px] placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            onChange={(e) => setStock(e.target.value)}
-            placeholder="Enter your product stock..."
-          />
-        </div>
-        <br />
-        <div>
-          <label className="pb-2">Upload Images</label>
-          <input
-            type="file"
-            name="images"
-            id="upload"
-            className="hidden"
-            multiple
-            onChange={handleImageChange}
-          />
-          <div className="w-full flex items-center flex-wrap">
-            {/* Preview existing images */}
-            {images &&
-              images.map((image, index) => (
-                <img
-                  src={image.url}
-                  key={index}
-                  alt=""
-                  className="h-[120px] w-[120px] object-cover m-2"
-                />
-              ))}
-            {/* Preview new images */}
-            {newImages &&
-              newImages.map((image, index) => (
-                <img
-                  src={image}
-                  key={index}
-                  alt=""
-                  className="h-[120px] w-[120px] object-cover m-2"
-                />
-              ))}
-
-            <label htmlFor="upload">
-              <AiOutlinePlusCircle size={30} className="mt-3" color="#555" />
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Basic Information */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Product Id <span className="text-red-500">*</span>
             </label>
+            <input
+              type="text"
+              name="productId"
+              value={formData.productId}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Description <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows="4"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Status
+            </label>
+            <select
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
           </div>
         </div>
-        <br />
+
+        {/* Categorization */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Category <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              required
+            >
+              <option value="">Choose a category</option>
+              {categoriesData.map((category) => (
+                <option key={category.title} value={category.title}>
+                  {category.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Sub Category
+            </label>
+            <input
+              type="text"
+              name="subCategory"
+              value={formData.subCategory}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Brand <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="brand"
+              value={formData.brand}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Tags
+            </label>
+            <input
+              type="text"
+              name="tags"
+              value={formData.tags}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            />
+          </div>
+        </div>
+
+        {/* Pricing and Inventory */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Cost <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              name="cost"
+              value={formData.cost}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Original Price
+            </label>
+            <input
+              type="number"
+              name="originalPrice"
+              value={formData.originalPrice}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Discount Price <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              name="discountPrice"
+              value={formData.discountPrice}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Stock <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              name="stock"
+              value={formData.stock}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              required
+            />
+          </div>
+        </div>
+
+        {/* Additional Details */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Weight (in kg)
+            </label>
+            <input
+              type="number"
+              name="weight"
+              value={formData.weight}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Tax Code
+            </label>
+            <input
+              type="text"
+              name="taxCode"
+              value={formData.taxCode}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Expiration Date
+            </label>
+            <input
+              type="date"
+              name="expiration"
+              value={formData.expiration}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Bar Code Content
+            </label>
+            <input
+              type="text"
+              name="barCodeContent"
+              value={formData.barCodeContent}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            />
+          </div>
+        </div>
+
+        {/* Images */}
         <div>
-          <input
+          <label className="block text-sm font-medium text-gray-700">
+            Product Images
+          </label>
+          <div className="mt-1 flex items-center">
+            <input
+              type="file"
+              id="upload"
+              className="hidden"
+              multiple
+              onChange={handleImageChange}
+            />
+            <label htmlFor="upload" className="cursor-pointer">
+              <AiOutlinePlusCircle size={30} className="text-gray-600" />
+            </label>
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-4">
+            {/* Display existing images */}
+            {formData.images.map((image, index) => (
+              <img
+                key={`existing-${index}`}
+                src={image.url}
+                alt={`Product ${index + 1}`}
+                className="h-24 w-24 object-cover rounded-md"
+              />
+            ))}
+            {/* Display new images */}
+            {formData.newImages.map((image, index) => (
+              <img
+                key={`new-${index}`}
+                src={image}
+                alt={`New Product ${index + 1}`}
+                className="h-24 w-24 object-cover rounded-md"
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Submit Button */}
+        <div>
+          <button
             type="submit"
-            value="Update"
-            className="w-full border h-[35px] rounded-[3px] text-center cursor-pointer mt-8"
-          />
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Update Product
+          </button>
         </div>
       </form>
     </div>

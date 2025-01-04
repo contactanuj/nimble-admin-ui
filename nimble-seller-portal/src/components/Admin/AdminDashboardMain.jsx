@@ -141,7 +141,7 @@ const AdminDashboardMain = () => {
           <DataGrid
             rows={row}
             columns={columns}
-            pageSize={4}
+            pageSizeOptions={[5, 10, 25, 50, 100, { value: -1, label: 'All' }]}
             disableSelectionOnClick
             autoHeight
           />
