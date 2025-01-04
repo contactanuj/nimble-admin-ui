@@ -5,7 +5,7 @@ import { FiPackage, FiShoppingBag } from "react-icons/fi";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import Tooltip from '@mui/material/Tooltip';
-import logo from "../../../Assests/logo.png"
+import logo from "../../../Assests/NIMBLE_Brandmark-05.jpg"
 import { BiMessageSquareDetail } from "react-icons/bi";
 
 const DashboardHeader = () => {
@@ -15,7 +15,7 @@ const DashboardHeader = () => {
       <div>
         <Link to="/dashboard">
           <img src={logo} alt="Logo"
-          className="h-full max-h-[80px] w-auto" />
+          className="h-full max-h-[60px] w-auto rounded-full p-1 transition-transform duration-300 hover:scale-105" />
         </Link>
       </div>
       <div className="flex items-center">

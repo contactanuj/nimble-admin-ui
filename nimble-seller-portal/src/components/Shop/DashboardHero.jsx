@@ -80,7 +80,7 @@ const DashboardHero = () => {
         id: item._id,
         user: item.user?.name,
         itemsQty: item.cart.reduce((acc, item) => acc + item.qty, 0),
-        total: "US$ " + item.totalPrice,
+        total: "CAD$ " + item.totalPrice,
         status: item.status,
       });
   });

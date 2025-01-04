@@ -1,32 +1,31 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useMemo, useEffect } from 'react';
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
-  Button, Tooltip, Table, TableBody, TableCell, TableRow, TableContainer,
-  Paper, TextField, InputAdornment, IconButton, Typography, Box
-} from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
-import { AiOutlineArrowRight } from "react-icons/ai";
-import ClearIcon from '@mui/icons-material/Clear';
-import Loader from "../Layout/Loader";
-import { getAllOrdersOfShop } from "../../redux/actions/order";
-import { server } from "../../server";
-import axios from "axios";
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
+import { ArrowDown, ArrowRight, ArrowUp, ArrowUpDown, Filter, Search, X } from "lucide-react";
 import debounce from 'lodash/debounce';
+import { getAllOrdersOfShop } from '../../redux/actions/order';
 
 const OrderItemsTooltip = ({ items }) => (
-  <TableContainer component={Paper}>
-    <Table size="small" aria-label="order items">
-      <TableBody>
+  <div className="bg-white shadow-lg rounded-lg p-4 min-w-[200px] border">
+    <table className="w-full">
+      <tbody>
         {items.map((item, index) => (
-          <TableRow key={index}>
-            <TableCell>{item.name}</TableCell>
-            <TableCell align="right">{item.qty} x ${item.discountPrice}</TableCell>
-          </TableRow>
+          <tr key={index} className="border-b last:border-b-0">
+            <td className="py-2">{item.name}</td>
+            <td className="text-right py-2">{item.qty} x ${item.discountPrice}</td>
+          </tr>
         ))}
-      </TableBody>
-    </Table>
-  </TableContainer>
+      </tbody>
+    </table>
+  </div>
 );
 
 const formatDate = (dateString) => {
@@ -42,7 +41,47 @@ const formatDate = (dateString) => {
   });
 };
 
-const AllOrders = (props) => {
+// Filter component for individual columns
+const ColumnFilter = ({ column, table }) => {
+  const firstValue = table
+    .getPreFilteredRowModel()
+    .flatRows[0]?.getValue(column.id);
+
+  const columnFilterValue = column.getFilterValue();
+
+  return typeof firstValue === "number" ? (
+    <div className="flex space-x-2">
+      <input
+        type="number"
+        value={(columnFilterValue)?.[0] ?? ""}
+        onChange={(e) =>
+          column.setFilterValue((old) => [e.target.value, old?.[1]])
+        }
+        placeholder="Min"
+        className="w-24 border rounded px-2 py-1"
+      />
+      <input
+        type="number"
+        value={(columnFilterValue)?.[1] ?? ""}
+        onChange={(e) =>
+          column.setFilterValue((old) => [old?.[0], e.target.value])
+        }
+        placeholder="Max"
+        className="w-24 border rounded px-2 py-1"
+      />
+    </div>
+  ) : (
+    <input
+      type="text"
+      value={(columnFilterValue ?? "")}
+      onChange={(e) => column.setFilterValue(e.target.value)}
+      placeholder={`Filter ${column.id}...`}
+      className="w-36 border rounded px-2 py-1"
+    />
+  );
+};
+
+const AllOrders = ({ showSearchBox = true }) => {
   const { orders, isLoading } = useSelector((state) => state.order);
   const { seller } = useSelector((state) => state.seller);
   const [searchQuery, setSearchQuery] = useState("");
@@ -62,190 +101,276 @@ const AllOrders = (props) => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [dispatch, seller._id]);
+  const [globalFilter, setGlobalFilter] = useState("");
+  const [sorting, setSorting] = useState([]);
+  const [columnFilters, setColumnFilters] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [hoveredRow, setHoveredRow] = useState(null);
 
-  // Debounce search to prevent clearing on typing
-  const debouncedSearch = debounce(async () => {
-    if (!searchQuery.trim()) {
-      setFilteredOrders([]);
-      return;
-    }
-
-    setIsSearching(true);
-
-    try {
-      const { data } = await axios.get(
-        `${server}/order/search-orders`,
-        {
-          params: { query: searchQuery },
-          withCredentials: true
-        }
-      );
-
-      if (data.success) {
-        setFilteredOrders(data.orders.length === 0 ? [] : data.orders);
-      } else {
-        setFilteredOrders([]);
-      }
-    } catch (error) {
-      console.error(error);
-      alert("An error occurred while searching for orders");
-      setFilteredOrders([]);
-    } finally {
-      setIsSearching(false);
-    }
-  }, 500); // Adjust the delay for debounce (500ms in this case)
-
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-  };
-
-  const handleClearSearch = () => {
-    setSearchQuery("");
-    setFilteredOrders([]);
-  };
-
-  const displayedOrders = searchQuery && filteredOrders.length > 0 ? filteredOrders : orders;
-
-  const columns = [
-    { field: "id", headerName: "Order ID", minWidth: 170, flex: 0.8 },
-    { field: "user", headerName: "User", minWidth: 150, flex: 0.7 },
-    {
-      field: "status",
-      headerName: "Status",
-      minWidth: 150,
-      flex: 0.7,
-    },
-    {
-      field: "collectionTime",
-      headerName: "Collection Time",
-      minWidth: 250,
-      flex: 0.7,
-    },
-    {
-      field: "itemsQty",
-      headerName: "Items Qty",
-      type: "number",
-      minWidth: 150,
-      flex: 0.7,
-      renderCell: (params) => (
-        <Tooltip
-          title={<OrderItemsTooltip items={params.row.items} />}
-          arrow
-          placement="top-start"
-        >
-          <Button>{params.value}</Button>
-        </Tooltip>
-      ),
-    },
-    {
-      field: "total",
-      headerName: "Total",
-      type: "number",
-      minWidth: 150,
-      flex: 0.8,
-    },
-    {
-      field: " ",
-      flex: 1,
-      minWidth: 150,
-      headerName: "",
-      type: "number",
-      sortable: false,
-      renderCell: (params) => {
-        return (
-          <Link to={`/order/${params.id}`}>
-            <Button>
-              <AiOutlineArrowRight size={20} />
-            </Button>
-          </Link>
-        );
+  const columns = useMemo(
+    () => [
+      {
+        header: 'Order ID',
+        accessorKey: '_id',
+        enableSorting: true,
+        enableColumnFilter: true,
       },
-    },
-  ];
-
-  const rows = displayedOrders?.map((item) => ({
-    id: item._id,
-    user: item.user?.name,
-    itemsQty: item.cart.length,
-    total: "US$ " + item.totalPrice,
-    status: item.status,
-    collectionTime: formatDate(item.selectedCollectionTime),
-    items: item.cart,
-  }));
-
-  const MobileOrderCard = ({ order }) => (
-    <Box sx={{ mb: 2, p: 2, border: '1px solid #ddd', borderRadius: 2 }}>
-      <Typography variant="subtitle1">Order ID: {order.id}</Typography>
-      <Typography>User: {order.user}</Typography>
-      <Typography>Status: {order.status}</Typography>
-      <Typography>Collection Time: {order.collectionTime}</Typography>
-      <Typography>Items Qty: {order.itemsQty}</Typography>
-      <Typography>Total: {order.total}</Typography>
-      <Button component={Link} to={`/order/${order.id}`} sx={{ mt: 1 }}>
-        View Details <AiOutlineArrowRight size={20} />
-      </Button>
-    </Box>
+      {
+        header: 'User',
+        accessorKey: 'user.name',
+        enableSorting: true,
+        enableColumnFilter: true,
+      },
+      {
+        header: 'Status',
+        accessorKey: 'status',
+        enableSorting: true,
+        enableColumnFilter: true,
+      },
+      {
+        header: 'Collection Time',
+        accessorKey: 'selectedCollectionTime',
+        cell: ({ getValue }) => formatDate(getValue()),
+        enableSorting: true,
+        enableColumnFilter: true,
+      },
+      {
+        header: 'Items',
+        accessorKey: 'cart',
+        cell: ({ row, getValue }) => (
+          <div className="relative">
+            {hoveredRow === row.original._id ? (
+              <div className="absolute z-50 top-full left-0">
+                <OrderItemsTooltip items={getValue()} />
+              </div>
+            ) : getValue().length}
+          </div>
+        ),
+        enableSorting: true,
+        sortingFn: (rowA, rowB) => rowA.original.cart.length - rowB.original.cart.length,
+      },
+      {
+        header: 'Total',
+        accessorKey: 'totalPrice',
+        cell: ({ getValue }) => `US$ ${getValue()}`,
+        enableSorting: true,
+        enableColumnFilter: true,
+      },
+      {
+        header: '',
+        accessorKey: '_id',
+        cell: ({ getValue }) => (
+          <Link to={`/order/${getValue()}`}>
+            <button className="p-2 hover:bg-gray-100 rounded-full">
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </Link>
+        ),
+        enableSorting: true,
+        enableColumnFilter: true,
+      },
+    ],
+    [hoveredRow]
   );
 
-  return (
-    <>
-      {isLoading ? (
-        <Loader />
-      ) : (
-        <Box sx={{ width: '100%', p: { xs: 1, sm: 2, md: 3 }, mt: 2, bgcolor: 'background.paper' }}>
-          {props.showSearchBox !== false && (
-            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 2 }}>
-            <TextField
-              label="Search Orders"
-              variant="outlined"
-              fullWidth
-              value={searchQuery}
-              onChange={handleSearchChange}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={handleClearSearch} edge="end">
-                      <ClearIcon />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={debouncedSearch}
-              sx={{ height: { sm: '56px' }, minWidth: { sm: '120px' } }}
-            >
-              Search
-            </Button>
-          </Box>)}
+  const table = useReactTable({
+    data: orders,
+    columns,
+    state: {
+      sorting,
+      globalFilter,
+      columnFilters,
+    },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: 10,
+      },
+    },
+    manualPagination: false,
 
-          {isMobile ? (
-            <Box>
-              {rows.map((row) => (
-                <MobileOrderCard key={row.id} order={row} />
+  });
+
+  const debouncedSearch = debounce((value) => {
+    setGlobalFilter(value);
+  }, 300);
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    debouncedSearch(value);
+  };
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center min-h-[400px]">Loading...</div>;
+  }
+
+  return (
+    <div className="w-full bg-white rounded-lg shadow-sm">
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-semibold">Orders</h2>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200"
+          >
+            <Filter className="h-4 w-4" />
+            {showFilters ? 'Hide Filters' : 'Show Filters'}
+          </button>
+        </div>
+        
+        {showSearchBox && (
+          <div className="flex gap-4 mb-6">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Search all columns..."
+                onChange={handleSearchChange}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            </div>
+          </div>
+        )}
+
+        {showFilters && (
+          <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+            <h3 className="font-medium mb-2">Column Filters</h3>
+            <div className="flex flex-wrap gap-4">
+              {table.getAllColumns()
+                .filter(column => column.getCanFilter())
+                .map(column => (
+                  <div key={column.id} className="flex flex-col">
+                    <label className="text-sm text-gray-600 mb-1">
+                      {column.columnDef.header}
+                    </label>
+                    <ColumnFilter column={column} table={table} />
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+
+        <div className="rounded-lg border">
+          <table className="w-full">
+            <thead>
+              {table.getHeaderGroups().map(headerGroup => (
+                <tr key={headerGroup.id} className="border-b bg-gray-50">
+                  {headerGroup.headers.map(header => (
+                    <th key={header.id} className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                      {header.isPlaceholder ? null : (
+                        <div
+                          className={`flex items-center gap-2 ${
+                            header.column.getCanSort() ? 'cursor-pointer select-none' : ''
+                          }`}
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                          
+                          {header.column.getCanSort() && (
+                            <span className="flex items-center">
+                              {{
+                                asc: <ArrowUp className="h-4 w-4" />,
+                                desc: <ArrowDown className="h-4 w-4" />,
+                              }[header.column.getIsSorted()] ?? (
+                                <ArrowUpDown className="h-4 w-4" />
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </th>
+                  ))}
+                </tr>
               ))}
-            </Box>
-          ) : (
-            <DataGrid
-              rows={rows}
-              columns={columns}
-              pageSize={10}
-              rowsPerPageOptions={[10, 20, 50]}
-              disableSelectionOnClick
-              autoHeight
-              sx={{
-                '& .MuiDataGrid-cell': {
-                  whiteSpace: 'normal',
-                  wordWrap: 'break-word',
-                },
-              }}
-            />
-          )}
-        </Box>
-      )}
-    </>
+            </thead>
+            <tbody>
+              {table.getRowModel().rows.map(row => (
+                <tr
+                  key={row.id}
+                  className="border-b last:border-b-0 hover:bg-gray-50"
+                  onMouseEnter={() => setHoveredRow(row.original._id)}
+                  onMouseLeave={() => setHoveredRow(null)}
+                >
+                  {row.getVisibleCells().map(cell => (
+                    <td key={cell.id} className="px-4 py-3 text-sm">
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="mt-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <button
+              className="px-3 py-1 rounded border hover:bg-gray-50 disabled:opacity-50"
+              onClick={() => table.setPageIndex(0)}
+              disabled={!table.getCanPreviousPage()}
+            >
+              {'<<'}
+            </button>
+            <button
+              className="px-3 py-1 rounded border hover:bg-gray-50 disabled:opacity-50"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              {'<'}
+            </button>
+            <button
+              className="px-3 py-1 rounded border hover:bg-gray-50 disabled:opacity-50"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              {'>'}
+            </button>
+            <button
+              className="px-3 py-1 rounded border hover:bg-gray-50 disabled:opacity-50"
+              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+              disabled={!table.getCanNextPage()}
+            >
+              {'>>'}
+            </button>
+          </div>
+          
+          <span className="flex items-center gap-1 text-sm">
+            <div>Page</div>
+            <strong>
+              {table.getState().pagination.pageIndex + 1} of{' '}
+              {table.getPageCount()}
+            </strong>
+          </span>
+          
+          <select
+            value={table.getState().pagination.pageSize}
+            onChange={e => {
+              const value = e.target.value === 'all' ? orders.length : Number(e.target.value);
+              table.setPageSize(value);
+            }}
+            className="px-2 py-1 rounded border"
+          >
+            {[10, 20, 30, 40, 50, 'all'].map(pageSize => (
+              <option key={pageSize} value={pageSize}>
+                Show {pageSize === 'all' ? 'All' : pageSize}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+    </div>
   );
 };
 

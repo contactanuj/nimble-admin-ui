@@ -292,7 +292,7 @@ const handleAlternativesSubmit = async (alternateItems) => {
                           )}
                         </div>
                         <div className={`text-sm ${isRemoved ? 'text-gray-400' : 'text-gray-500'}`}>
-                          US${originalItem.discountPrice} x {modifiedItem?.qty || originalItem.qty}
+                          CAD${originalItem.discountPrice} x {modifiedItem?.qty || originalItem.qty}
                         </div>
                         {isRemoved && (
                           <div className="text-red-500 mt-2 text-sm">
@@ -336,7 +336,7 @@ const handleAlternativesSubmit = async (alternateItems) => {
                             </span>
                           </div>
                           <div className="text-sm text-teal-600">
-                            US${modifiedItem.discountPrice} x {modifiedItem.qty}
+                            CAD${modifiedItem.discountPrice} x {modifiedItem.qty}
                           </div>
                           <div className="text-teal-600 mt-2 text-sm">
                             New item added
@@ -414,7 +414,7 @@ const handleAlternativesSubmit = async (alternateItems) => {
                           {item.name} (Qty: {item.qty})
                         </div>
                         <div className="text-sm text-gray-500">
-                          US${item.discountPrice} x {item.qty}
+                          CAD${item.discountPrice} x {item.qty}
                         </div>
                         {outOfStockItems.find((outOfStockItem) => outOfStockItem._id === item._id) && (
                           <div className="text-red-500 mt-2">
@@ -449,11 +449,11 @@ const handleAlternativesSubmit = async (alternateItems) => {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Subtotal</span>
-                      <span className="font-medium">US${data?.totalPrice}</span>
+                      <span className="font-medium">CAD${data?.totalPrice}</span>
                     </div>
                     <div className="flex justify-between font-bold text-lg text-teal-600 mt-3">
                       <span>Total</span>
-                      <span>US${data?.totalPrice}</span>
+                      <span>CAD${data?.totalPrice}</span>
                     </div>
                   </div>
                 </div>
